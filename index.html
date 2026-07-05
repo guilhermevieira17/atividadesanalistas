@@ -141,6 +141,20 @@
         </div>
       </div>
       <p class="small muted">Cria as 16 atividades do turno AM e as 16 do turno PM para o dia selecionado (se ainda não existirem). Depois, atribua um analista a cada uma.</p>
+      <div style="display:flex; gap:8px; align-items:flex-end; margin-bottom:14px; flex-wrap:wrap; border-top:1px solid var(--border); padding-top:12px;">
+        <div style="flex:1; min-width:220px;">
+          <label style="margin-top:0;">Nova atividade (fora da lista padrão)</label>
+          <input type="text" id="new-activity-name" placeholder="Nome da atividade">
+        </div>
+        <div>
+          <label style="margin-top:0;">Turno</label>
+          <select id="new-activity-turno" style="width:auto; min-width:100px;">
+            <option value="AM">AM</option>
+            <option value="PM">PM</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary" style="margin-top:0" onclick="addCustomActivity()">Adicionar atividade</button>
+      </div>
       <table class="simple" id="assign-table">
         <thead><tr><th>Turno</th><th>Atividade</th><th>Analista</th><th>Status</th></tr></thead>
         <tbody></tbody>
@@ -304,6 +318,38 @@ async function generateDay() {
   }
 }
 
+async function addCustomActivity() {
+  const nameInput = document.getElementById('new-activity-name');
+  const turnoSel = document.getElementById('new-activity-turno');
+  const name = nameInput.value.trim();
+  const turno = turnoSel.value;
+  if (!name) { toast('Informe o nome da atividade.', 'err'); return; }
+  const d = selectedDate();
+  try {
+    await restRequest('tarefas?on_conflict=activity_type,activity_date,turno', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify([{ activity_type: name, activity_date: d, turno }])
+    });
+    nameInput.value = '';
+    await refreshAll(false);
+    toast('Atividade adicionada para ' + fmtDate(d) + '.', 'ok');
+  } catch (e) {
+    toast('Erro ao adicionar atividade: ' + e.message, 'err');
+  }
+}
+
+async function deleteTask(taskId) {
+  if (!confirm('Remover esta atividade? Essa ação não pode ser desfeita.')) return;
+  try {
+    await restRequest(`tarefas?id=eq.${taskId}`, { method: 'DELETE' });
+    await refreshAll(false);
+    toast('Atividade removida.', 'ok');
+  } catch (e) {
+    toast('Erro ao remover atividade: ' + e.message, 'err');
+  }
+}
+
 async function addAnalyst() {
   const name = document.getElementById('t-name').value.trim();
   const email = document.getElementById('t-email').value.trim();
@@ -409,6 +455,7 @@ function renderAssignTable() {
       <td>
         <span class="pill ${t.status === 'concluido' ? 'pill-done' : 'pill-pending'}">${t.status === 'concluido' ? 'Concluído' : 'Pendente'}</span>
         <button class="btn btn-ghost btn-sm" onclick="toggleTaskStatus('${t.id}')">${t.status === 'concluido' ? 'Reabrir' : 'Concluir'}</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTask('${t.id}')">Remover</button>
       </td>`;
     tbody.appendChild(tr);
   });
