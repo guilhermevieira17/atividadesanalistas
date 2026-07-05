@@ -3,34 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <title>Divisão de Atividades - Analistas (HUB LPR-16)</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css">
 <style>
   :root {
     color-scheme: light;
-    --bg: #f6f7f9;
-    --card: #ffffff;
-    --border: #e3e6ea;
-    --text: #1c2126;
-    --muted: #6b7280;
-    --primary: #2f5fed;
-    --primary-dark: #1e46c9;
-    --green: #17845a;
-    --green-bg: #e6f6ef;
-    --amber: #b4740e;
-    --amber-bg: #fdf1de;
-    --red: #c0392b;
-    --radius: 10px;
+    --bg: #f6f7f9; --card: #ffffff; --border: #e3e6ea; --text: #1c2126; --muted: #6b7280;
+    --primary: #2f5fed; --primary-dark: #1e46c9; --green: #17845a; --green-bg: #e6f6ef;
+    --amber: #b4740e; --amber-bg: #fdf1de; --red: #c0392b; --radius: 10px;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 14px;
-  }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
   #app { max-width: 1100px; margin: 0 auto; padding: 20px 24px 60px; }
   header.top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
   header.top h1 { font-size: 20px; margin: 0; }
@@ -39,10 +23,7 @@
   .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
   .sync-dot.busy { background: var(--amber); }
   nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; flex-wrap: wrap; }
-  nav.tabs button {
-    border: none; background: none; padding: 10px 14px; font-size: 13.5px; color: var(--muted);
-    cursor: pointer; border-bottom: 2px solid transparent; font-weight: 500;
-  }
+  nav.tabs button { border: none; background: none; padding: 10px 14px; font-size: 13.5px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; font-weight: 500; }
   nav.tabs button.active { color: var(--primary); border-bottom-color: var(--primary); }
   section.tab { display: none; }
   section.tab.active { display: block; }
@@ -55,10 +36,7 @@
     font-size: 13.5px; font-family: inherit; background: #fff; color: var(--text);
   }
   textarea { resize: vertical; min-height: 60px; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 7px;
-    padding: 9px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin-top: 12px;
-  }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 7px; padding: 9px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin-top: 12px; }
   .btn:disabled { opacity: .55; cursor: default; }
   .btn-primary { background: var(--primary); color: #fff; }
   .btn-primary:hover { background: var(--primary-dark); }
@@ -98,7 +76,7 @@
   <header class="top">
     <div>
       <h1>Divisão de Atividades — HUB LPR-16</h1>
-      <p>Atribua tarefas e acompanhe o status de conclusão do time. Dados compartilhados em tempo real (Supabase).</p>
+      <p>Atribua tarefas e acompanhe o status de conclusão do time. Dados em tempo real (Supabase).</p>
     </div>
     <div class="sync-badge"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">sincronizado</span> <button class="btn btn-secondary btn-sm" style="margin-top:0" onclick="refreshAll(true)">Atualizar</button></div>
   </header>
@@ -110,7 +88,6 @@
     <button class="tab-btn" data-tab="tab-team" onclick="switchTab('tab-team')">Equipe</button>
   </nav>
 
-  <!-- PAINEL DO LÍDER -->
   <section id="tab-leader" class="tab active">
     <div class="kpis">
       <div class="kpi"><div class="num" id="kpi-total">0</div><div class="lbl">Tarefas totais</div></div>
@@ -119,14 +96,8 @@
       <div class="kpi"><div class="num" id="kpi-overdue">0</div><div class="lbl">Atrasadas</div></div>
     </div>
     <div class="grid-2">
-      <div class="card">
-        <h2>Status geral</h2>
-        <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
-      </div>
-      <div class="card">
-        <h2>Carga por analista</h2>
-        <div class="chart-wrap"><canvas id="chart-analyst"></canvas></div>
-      </div>
+      <div class="card"><h2>Status geral</h2><div class="chart-wrap"><canvas id="chart-status"></canvas></div></div>
+      <div class="card"><h2>Carga por analista</h2><div class="chart-wrap"><canvas id="chart-analyst"></canvas></div></div>
     </div>
     <div class="card">
       <div class="flex-between">
@@ -145,7 +116,6 @@
     </div>
   </section>
 
-  <!-- ATRIBUIR TAREFA -->
   <section id="tab-assign" class="tab">
     <div class="card">
       <h2>Nova tarefa</h2>
@@ -154,20 +124,13 @@
       <label>Descrição</label>
       <textarea id="f-desc" placeholder="Detalhes da atividade..."></textarea>
       <div class="grid-2">
-        <div>
-          <label>Atribuir para</label>
-          <select id="f-analyst"></select>
-        </div>
-        <div>
-          <label>Prazo</label>
-          <input type="date" id="f-due">
-        </div>
+        <div><label>Atribuir para</label><select id="f-analyst"></select></div>
+        <div><label>Prazo</label><input type="date" id="f-due"></div>
       </div>
       <button class="btn btn-primary" id="btn-create-task" onclick="createTask()">Atribuir tarefa</button>
     </div>
   </section>
 
-  <!-- MINHAS TAREFAS -->
   <section id="tab-mine" class="tab">
     <div class="card">
       <label>Quem é você?</label>
@@ -180,7 +143,6 @@
     </div>
   </section>
 
-  <!-- EQUIPE -->
   <section id="tab-team" class="tab">
     <div class="card">
       <h2>Adicionar analista</h2>
@@ -209,14 +171,14 @@
 <div class="toast-container" id="toasts"></div>
 
 <script>
-const PROJECT_ID = "iqssuavadcxboclocnem";
-const TOOL_EXECUTE_SQL = "mcp__e576e259-3224-4581-a86d-e166866fd6f4__execute_sql";
+// Configuração do Supabase (chave anon pública — protegida pelas políticas de RLS do banco)
+const SUPABASE_URL = "https://iqssuavadcxboclocnem.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxc3N1YXZhZGN4Ym9jbG9jbmVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzQwOTcsImV4cCI6MjA5ODgxMDA5N30.7Cgz3nz-U9Z82nYgGg0VkI0ga3tWSe4u_YVcfl07Byo";
 
 let analysts = [];
 let tasks = [];
 let busyCount = 0;
 
-// ---------- sync indicator ----------
 function setBusy(isBusy) {
   busyCount += isBusy ? 1 : -1;
   if (busyCount < 0) busyCount = 0;
@@ -226,34 +188,29 @@ function setBusy(isBusy) {
   else { dot.classList.remove('busy'); label.textContent = 'sincronizado'; }
 }
 
-// ---------- SQL helper ----------
-function sqlEscape(str) {
-  return String(str ?? '').replace(/'/g, "''");
-}
-function toSqlValue(v) {
-  if (v === null || v === undefined || v === '') return 'NULL';
-  return `'${sqlEscape(v)}'`;
-}
-
-async function sqlQuery(query) {
+async function restRequest(path, options) {
   setBusy(true);
   try {
-    const r = await window.cowork.callMcpTool(TOOL_EXECUTE_SQL, { project_id: PROJECT_ID, query });
-    if (r && r.isError) throw new Error('Erro ao consultar o banco.');
-    const data = r.structuredContent ?? JSON.parse(r.content[0].text);
-    const resultText = (data && data.result) ? data.result : (typeof data === 'string' ? data : '');
-    const match = resultText.match(/<untrusted-data-[^>]*>([\s\S]*?)<\/untrusted-data-[^>]*>/);
-    const raw = match ? match[1].trim() : resultText.trim();
-    if (!raw) return [];
-    try { return JSON.parse(raw); } catch (e) { return []; }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      ...options,
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        ...(options && options.headers ? options.headers : {})
+      }
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`${res.status}: ${errText}`);
+    }
+    if (res.status === 204) return null;
+    return await res.json();
   } finally {
     setBusy(false);
   }
 }
 
-function uid() { return Math.random().toString(36).slice(2, 10); }
-
-// ---------- tabs ----------
 function switchTab(id) {
   document.querySelectorAll('section.tab').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -263,7 +220,6 @@ function switchTab(id) {
   if (id === 'tab-mine') renderMyTasks();
 }
 
-// ---------- toasts ----------
 function toast(msg, type) {
   const el = document.createElement('div');
   el.className = 'toast' + (type ? ' ' + type : '');
@@ -272,12 +228,11 @@ function toast(msg, type) {
   setTimeout(() => el.remove(), 4000);
 }
 
-// ---------- data loading ----------
 async function loadAnalysts() {
-  analysts = await sqlQuery('select id, name, email from public.analistas order by name asc;');
+  analysts = await restRequest('analistas?select=id,name,email&order=name.asc');
 }
 async function loadTasks() {
-  tasks = await sqlQuery('select id, title, description, analyst_id, to_char(due_date, \'YYYY-MM-DD\') as due_date, status, created_at, completed_at from public.tarefas order by created_at desc;');
+  tasks = await restRequest('tarefas?select=id,title,description,analyst_id,due_date,status,created_at,completed_at&order=created_at.desc');
 }
 async function refreshAll(showToast) {
   try {
@@ -292,7 +247,6 @@ async function refreshAll(showToast) {
   }
 }
 
-// ---------- analysts ----------
 async function addAnalyst() {
   const name = document.getElementById('t-name').value.trim();
   const email = document.getElementById('t-email').value.trim();
@@ -300,7 +254,7 @@ async function addAnalyst() {
   const btn = document.getElementById('btn-add-analyst');
   btn.disabled = true;
   try {
-    await sqlQuery(`insert into public.analistas (name, email) values (${toSqlValue(name)}, ${toSqlValue(email)});`);
+    await restRequest('analistas', { method: 'POST', body: JSON.stringify([{ name, email: email || null }]) });
     document.getElementById('t-name').value = '';
     document.getElementById('t-email').value = '';
     await refreshAll(false);
@@ -316,7 +270,7 @@ async function removeAnalyst(id) {
     if (!confirm('Este analista tem tarefas associadas. Remover mesmo assim?')) return;
   }
   try {
-    await sqlQuery(`delete from public.analistas where id = '${sqlEscape(id)}';`);
+    await restRequest(`analistas?id=eq.${id}`, { method: 'DELETE' });
     await refreshAll(false);
   } catch (e) {
     toast('Erro ao remover analista: ' + e.message, 'err');
@@ -325,10 +279,11 @@ async function removeAnalyst(id) {
 async function loadSampleData() {
   if (analysts.length > 0) { if (!confirm('Isso adiciona analistas de exemplo à lista atual. Continuar?')) return; }
   try {
-    await sqlQuery(`insert into public.analistas (name, email) values
-      ('Ana Souza', 'ana.souza@empresa.com'),
-      ('Bruno Lima', 'bruno.lima@empresa.com'),
-      ('Carla Dias', 'carla.dias@empresa.com');`);
+    await restRequest('analistas', { method: 'POST', body: JSON.stringify([
+      { name: 'Ana Souza', email: 'ana.souza@empresa.com' },
+      { name: 'Bruno Lima', email: 'bruno.lima@empresa.com' },
+      { name: 'Carla Dias', email: 'carla.dias@empresa.com' }
+    ]) });
     await refreshAll(false);
     toast('Analistas de exemplo adicionados.', 'ok');
   } catch (e) {
@@ -356,7 +311,6 @@ function refreshAnalystSelects() {
   const filt = document.getElementById('filter-analyst'); filt.innerHTML = '<option value="">Todos os analistas</option>' + opts;
 }
 
-// ---------- tasks ----------
 async function createTask() {
   const title = document.getElementById('f-title').value.trim();
   const desc = document.getElementById('f-desc').value.trim();
@@ -369,7 +323,9 @@ async function createTask() {
   const btn = document.getElementById('btn-create-task');
   btn.disabled = true;
   try {
-    await sqlQuery(`insert into public.tarefas (title, description, analyst_id, due_date) values (${toSqlValue(title)}, ${toSqlValue(desc)}, '${sqlEscape(analystId)}', ${due ? "'" + sqlEscape(due) + "'" : 'NULL'});`);
+    await restRequest('tarefas', { method: 'POST', body: JSON.stringify([{
+      title, description: desc || null, analyst_id: analystId, due_date: due || null
+    }]) });
     toast('Tarefa atribuída a ' + (analyst ? analyst.name : 'analista') + '.', 'ok');
     document.getElementById('f-title').value = '';
     document.getElementById('f-desc').value = '';
@@ -387,14 +343,15 @@ async function toggleTaskStatus(taskId) {
   if (!task) return;
   const newStatus = task.status === 'pendente' ? 'concluido' : 'pendente';
   try {
-    await sqlQuery(`update public.tarefas set status = '${newStatus}', completed_at = ${newStatus === 'concluido' ? 'now()' : 'NULL'} where id = '${sqlEscape(taskId)}';`);
+    await restRequest(`tarefas?id=eq.${taskId}`, { method: 'PATCH', body: JSON.stringify({
+      status: newStatus, completed_at: newStatus === 'concluido' ? new Date().toISOString() : null
+    }) });
     await refreshAll(false);
   } catch (e) {
     toast('Erro ao atualizar tarefa: ' + e.message, 'err');
   }
 }
 
-// ---------- rendering: leader ----------
 let statusChart, analystChart, gridInstance;
 function renderLeader() {
   const total = tasks.length;
@@ -416,10 +373,7 @@ function renderLeader() {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
   });
 
-  const byAnalyst = analysts.map(a => ({
-    name: a.name,
-    count: tasks.filter(t => t.analyst_id === a.id && t.status === 'pendente').length
-  }));
+  const byAnalyst = analysts.map(a => ({ name: a.name, count: tasks.filter(t => t.analyst_id === a.id && t.status === 'pendente').length }));
   const ctx2 = document.getElementById('chart-analyst');
   if (analystChart) analystChart.destroy();
   analystChart = new Chart(ctx2, {
@@ -440,12 +394,7 @@ function renderLeaderTable() {
 
   const data = rows.map(t => {
     const a = analysts.find(x => x.id === t.analyst_id);
-    return [
-      t.title,
-      a ? a.name : '—',
-      t.due_date || '—',
-      t.status === 'concluido' ? 'Concluído' : 'Pendente'
-    ];
+    return [t.title, a ? a.name : '—', t.due_date || '—', t.status === 'concluido' ? 'Concluído' : 'Pendente'];
   });
 
   const container = document.getElementById('gridjs-tasks');
@@ -453,15 +402,10 @@ function renderLeaderTable() {
   if (!data.length) return;
   gridInstance = new gridjs.Grid({
     columns: ['Tarefa', 'Analista', 'Prazo', 'Status'],
-    data,
-    sort: true,
-    search: true,
-    pagination: { limit: 8 },
-    className: { table: 'gridjs-table' }
+    data, sort: true, search: true, pagination: { limit: 8 }, className: { table: 'gridjs-table' }
   }).render(container);
 }
 
-// ---------- rendering: minhas tarefas ----------
 function renderMyTasks() {
   const id = document.getElementById('mine-analyst').value;
   const list = document.getElementById('mine-list');
@@ -488,7 +432,8 @@ function renderMyTasks() {
 async function resetAll() {
   if (!confirm('Isso apaga todos os analistas e tarefas do banco (para todo mundo que usa o app). Continuar?')) return;
   try {
-    await sqlQuery('delete from public.tarefas; delete from public.analistas;');
+    await restRequest('tarefas?id=not.is.null', { method: 'DELETE' });
+    await restRequest('analistas?id=not.is.null', { method: 'DELETE' });
     await refreshAll(false);
     toast('Dados apagados.', 'ok');
   } catch (e) {
@@ -500,10 +445,8 @@ function escapeHtml(s) {
   return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// ---------- init ----------
 async function init() {
   await refreshAll(false);
-  // sincroniza a cada 20s para refletir mudanças feitas por outras pessoas
   setInterval(() => refreshAll(false), 20000);
 }
 init();
