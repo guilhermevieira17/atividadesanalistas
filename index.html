@@ -118,7 +118,7 @@
           <select id="filter-turno" onchange="renderLeaderTable()">
             <option value="">Todos os turnos</option>
             <option value="AM">AM</option>
-            <option value="SD">SD</option>
+            <option value="PM">PM</option>
           </select>
         </div>
       </div>
@@ -135,12 +135,12 @@
           <select id="assign-filter-turno" onchange="renderAssignTable()" style="width:auto; min-width:140px;">
             <option value="">Todos os turnos</option>
             <option value="AM">AM</option>
-            <option value="SD">SD</option>
+            <option value="PM">PM</option>
           </select>
           <button class="btn btn-primary" style="margin-top:0" onclick="generateDay()">Gerar atividades do dia</button>
         </div>
       </div>
-      <p class="small muted">Cria as 16 atividades do turno AM e as 16 do turno SD para o dia selecionado (se ainda não existirem). Depois, atribua um analista a cada uma.</p>
+      <p class="small muted">Cria as 16 atividades do turno AM e as 16 do turno PM para o dia selecionado (se ainda não existirem). Depois, atribua um analista a cada uma.</p>
       <table class="simple" id="assign-table">
         <thead><tr><th>Turno</th><th>Atividade</th><th>Analista</th><th>Status</th></tr></thead>
         <tbody></tbody>
@@ -199,7 +199,7 @@ const SHARED_ACTIVITIES = [
   "EXPEDIÇÃO / GEMBA","CONCLUSÃO PAINEL","RELATORIO OPERACIONAL FIM DE EXPEDIÇÃO"
 ];
 const AM_ACTIVITIES = SHARED_ACTIVITIES.concat(["REPORT - 07:00","REPORT - 08:00","REPORT - 09:00"]);
-const SD_ACTIVITIES = SHARED_ACTIVITIES.concat(["REPORT - 10:00","REPORT - 12:00","REPORT - 13:00"]);
+const PM_ACTIVITIES = SHARED_ACTIVITIES.concat(["REPORT - 10:00","REPORT - 12:00","REPORT - 13:00"]);
 
 let analysts = [];
 let tasks = [];
@@ -295,10 +295,10 @@ async function generateDay() {
     await restRequest('tarefas?on_conflict=activity_type,activity_date,turno', {
       method: 'POST',
       headers: { 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
-      body: JSON.stringify(SD_ACTIVITIES.map(a => ({ activity_type: a, activity_date: d, turno: 'SD' })))
+      body: JSON.stringify(PM_ACTIVITIES.map(a => ({ activity_type: a, activity_date: d, turno: 'PM' })))
     });
     await refreshAll(false);
-    toast('Atividades (AM e SD) geradas para ' + fmtDate(d) + '.', 'ok');
+    toast('Atividades (AM e PM) geradas para ' + fmtDate(d) + '.', 'ok');
   } catch (e) {
     toast('Erro ao gerar atividades: ' + e.message, 'err');
   }
