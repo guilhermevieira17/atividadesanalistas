@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Divisão de Atividades - Analistas (HUB LPR-16)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --border: #e3e6ea;
+    --text: #1c2126;
+    --muted: #6b7280;
+    --primary: #2f5fed;
+    --primary-dark: #1e46c9;
+    --green: #17845a;
+    --green-bg: #e6f6ef;
+    --amber: #b4740e;
+    --amber-bg: #fdf1de;
+    --red: #c0392b;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+  }
+  #app { max-width: 1100px; margin: 0 auto; padding: 20px 24px 60px; }
+  header.top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+  header.top h1 { font-size: 20px; margin: 0; }
+  header.top p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+  .sync-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: 7px 11px; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .sync-dot.busy { background: var(--amber); }
+  nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; flex-wrap: wrap; }
+  nav.tabs button {
+    border: none; background: none; padding: 10px 14px; font-size: 13.5px; color: var(--muted);
+    cursor: pointer; border-bottom: 2px solid transparent; font-weight: 500;
+  }
+  nav.tabs button.active { color: var(--primary); border-bottom-color: var(--primary); }
+  section.tab { display: none; }
+  section.tab.active { display: block; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 16px; }
+  .card h2 { font-size: 15px; margin: 0 0 12px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 4px; margin-top: 10px; }
+  input[type=text], input[type=email], input[type=date], textarea, select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px;
+    font-size: 13.5px; font-family: inherit; background: #fff; color: var(--text);
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 7px;
+    padding: 9px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin-top: 12px;
+  }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary { background: #eef1f6; color: var(--text); }
+  .btn-secondary:hover { background: #e2e6ed; }
+  .btn-ghost { background: none; color: var(--primary); padding: 4px 8px; margin-top: 0; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; margin-top: 0; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
+  .pill-pending { background: var(--amber-bg); color: var(--amber); }
+  .pill-done { background: var(--green-bg); color: var(--green); }
+  table.simple { width: 100%; border-collapse: collapse; }
+  table.simple th, table.simple td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  table.simple th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .02em; }
+  .empty { color: var(--muted); font-size: 13px; padding: 10px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .kpi .num { font-size: 24px; font-weight: 700; }
+  .kpi .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .chart-wrap { height: 220px; position: relative; }
+  .filters { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .filters select { width: auto; min-width: 160px; }
+  .toast-container { position: fixed; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 999; }
+  .toast { background: var(--text); color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.15); max-width: 320px; }
+  .toast.err { background: var(--red); }
+  .toast.ok { background: var(--green); }
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  .checklist-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .checklist-item:last-child { border-bottom: none; }
+  .checklist-item input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  #gridjs-tasks .gridjs-wrapper { border-radius: 8px; border-color: var(--border); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div>
+      <h1>Divisão de Atividades — HUB LPR-16</h1>
+      <p>Atribua tarefas e acompanhe o status de conclusão do time. Dados compartilhados em tempo real (Supabase).</p>
+    </div>
+    <div class="sync-badge"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">sincronizado</span> <button class="btn btn-secondary btn-sm" style="margin-top:0" onclick="refreshAll(true)">Atualizar</button></div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="tab-leader" onclick="switchTab('tab-leader')">Painel do Líder</button>
+    <button class="tab-btn" data-tab="tab-assign" onclick="switchTab('tab-assign')">Atribuir Tarefa</button>
+    <button class="tab-btn" data-tab="tab-mine" onclick="switchTab('tab-mine')">Minhas Tarefas</button>
+    <button class="tab-btn" data-tab="tab-team" onclick="switchTab('tab-team')">Equipe</button>
+  </nav>
+
+  <!-- PAINEL DO LÍDER -->
+  <section id="tab-leader" class="tab active">
+    <div class="kpis">
+      <div class="kpi"><div class="num" id="kpi-total">0</div><div class="lbl">Tarefas totais</div></div>
+      <div class="kpi"><div class="num" id="kpi-pending">0</div><div class="lbl">Pendentes</div></div>
+      <div class="kpi"><div class="num" id="kpi-done">0</div><div class="lbl">Concluídas</div></div>
+      <div class="kpi"><div class="num" id="kpi-overdue">0</div><div class="lbl">Atrasadas</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h2>Status geral</h2>
+        <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Carga por analista</h2>
+        <div class="chart-wrap"><canvas id="chart-analyst"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="flex-between">
+        <h2>Todas as tarefas</h2>
+        <div class="filters">
+          <select id="filter-analyst" onchange="renderLeaderTable()"><option value="">Todos os analistas</option></select>
+          <select id="filter-status" onchange="renderLeaderTable()">
+            <option value="">Todos os status</option>
+            <option value="pendente">Pendente</option>
+            <option value="concluido">Concluído</option>
+          </select>
+        </div>
+      </div>
+      <div id="gridjs-tasks"></div>
+      <div class="empty" id="leader-empty" style="display:none">Nenhuma tarefa cadastrada ainda. Vá em "Atribuir Tarefa" para começar.</div>
+    </div>
+  </section>
+
+  <!-- ATRIBUIR TAREFA -->
+  <section id="tab-assign" class="tab">
+    <div class="card">
+      <h2>Nova tarefa</h2>
+      <label>Título</label>
+      <input type="text" id="f-title" placeholder="Ex: Revisar relatório de estoque">
+      <label>Descrição</label>
+      <textarea id="f-desc" placeholder="Detalhes da atividade..."></textarea>
+      <div class="grid-2">
+        <div>
+          <label>Atribuir para</label>
+          <select id="f-analyst"></select>
+        </div>
+        <div>
+          <label>Prazo</label>
+          <input type="date" id="f-due">
+        </div>
+      </div>
+      <button class="btn btn-primary" id="btn-create-task" onclick="createTask()">Atribuir tarefa</button>
+    </div>
+  </section>
+
+  <!-- MINHAS TAREFAS -->
+  <section id="tab-mine" class="tab">
+    <div class="card">
+      <label>Quem é você?</label>
+      <select id="mine-analyst" onchange="renderMyTasks()"></select>
+    </div>
+    <div class="card">
+      <h2>Suas tarefas</h2>
+      <div id="mine-list"></div>
+      <div class="empty" id="mine-empty" style="display:none">Selecione seu nome acima para ver suas tarefas.</div>
+    </div>
+  </section>
+
+  <!-- EQUIPE -->
+  <section id="tab-team" class="tab">
+    <div class="card">
+      <h2>Adicionar analista</h2>
+      <div class="grid-2">
+        <div><label>Nome</label><input type="text" id="t-name" placeholder="Nome do analista"></div>
+        <div><label>E-mail (opcional, só para referência)</label><input type="email" id="t-email" placeholder="nome@empresa.com"></div>
+      </div>
+      <button class="btn btn-primary" id="btn-add-analyst" onclick="addAnalyst()">Adicionar à equipe</button>
+    </div>
+    <div class="card">
+      <div class="flex-between">
+        <h2>Time atual</h2>
+        <div>
+          <button class="btn btn-secondary btn-sm" onclick="loadSampleData()">Carregar exemplo</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetAll()">Apagar todos os dados</button>
+        </div>
+      </div>
+      <table class="simple" id="team-table">
+        <thead><tr><th>Nome</th><th>E-mail</th><th>Tarefas ativas</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="team-empty" style="display:none">Nenhum analista cadastrado ainda.</div>
+    </div>
+  </section>
+</div>
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const PROJECT_ID = "iqssuavadcxboclocnem";
+const TOOL_EXECUTE_SQL = "mcp__e576e259-3224-4581-a86d-e166866fd6f4__execute_sql";
+
+let analysts = [];
+let tasks = [];
+let busyCount = 0;
+
+// ---------- sync indicator ----------
+function setBusy(isBusy) {
+  busyCount += isBusy ? 1 : -1;
+  if (busyCount < 0) busyCount = 0;
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if (busyCount > 0) { dot.classList.add('busy'); label.textContent = 'sincronizando...'; }
+  else { dot.classList.remove('busy'); label.textContent = 'sincronizado'; }
+}
+
+// ---------- SQL helper ----------
+function sqlEscape(str) {
+  return String(str ?? '').replace(/'/g, "''");
+}
+function toSqlValue(v) {
+  if (v === null || v === undefined || v === '') return 'NULL';
+  return `'${sqlEscape(v)}'`;
+}
+
+async function sqlQuery(query) {
+  setBusy(true);
+  try {
+    const r = await window.cowork.callMcpTool(TOOL_EXECUTE_SQL, { project_id: PROJECT_ID, query });
+    if (r && r.isError) throw new Error('Erro ao consultar o banco.');
+    const data = r.structuredContent ?? JSON.parse(r.content[0].text);
+    const resultText = (data && data.result) ? data.result : (typeof data === 'string' ? data : '');
+    const match = resultText.match(/<untrusted-data-[^>]*>([\s\S]*?)<\/untrusted-data-[^>]*>/);
+    const raw = match ? match[1].trim() : resultText.trim();
+    if (!raw) return [];
+    try { return JSON.parse(raw); } catch (e) { return []; }
+  } finally {
+    setBusy(false);
+  }
+}
+
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+// ---------- tabs ----------
+function switchTab(id) {
+  document.querySelectorAll('section.tab').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector(`.tab-btn[data-tab="${id}"]`).classList.add('active');
+  if (id === 'tab-leader') renderLeader();
+  if (id === 'tab-mine') renderMyTasks();
+}
+
+// ---------- toasts ----------
+function toast(msg, type) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ---------- data loading ----------
+async function loadAnalysts() {
+  analysts = await sqlQuery('select id, name, email from public.analistas order by name asc;');
+}
+async function loadTasks() {
+  tasks = await sqlQuery('select id, title, description, analyst_id, to_char(due_date, \'YYYY-MM-DD\') as due_date, status, created_at, completed_at from public.tarefas order by created_at desc;');
+}
+async function refreshAll(showToast) {
+  try {
+    await Promise.all([loadAnalysts(), loadTasks()]);
+    refreshAnalystSelects();
+    renderTeam();
+    renderLeader();
+    renderMyTasks();
+    if (showToast) toast('Dados atualizados.', 'ok');
+  } catch (e) {
+    toast('Não foi possível sincronizar com o banco: ' + e.message, 'err');
+  }
+}
+
+// ---------- analysts ----------
+async function addAnalyst() {
+  const name = document.getElementById('t-name').value.trim();
+  const email = document.getElementById('t-email').value.trim();
+  if (!name) { toast('Informe o nome do analista.', 'err'); return; }
+  const btn = document.getElementById('btn-add-analyst');
+  btn.disabled = true;
+  try {
+    await sqlQuery(`insert into public.analistas (name, email) values (${toSqlValue(name)}, ${toSqlValue(email)});`);
+    document.getElementById('t-name').value = '';
+    document.getElementById('t-email').value = '';
+    await refreshAll(false);
+    toast('Analista adicionado à equipe.', 'ok');
+  } catch (e) {
+    toast('Erro ao adicionar analista: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+async function removeAnalyst(id) {
+  if (tasks.some(t => t.analyst_id === id)) {
+    if (!confirm('Este analista tem tarefas associadas. Remover mesmo assim?')) return;
+  }
+  try {
+    await sqlQuery(`delete from public.analistas where id = '${sqlEscape(id)}';`);
+    await refreshAll(false);
+  } catch (e) {
+    toast('Erro ao remover analista: ' + e.message, 'err');
+  }
+}
+async function loadSampleData() {
+  if (analysts.length > 0) { if (!confirm('Isso adiciona analistas de exemplo à lista atual. Continuar?')) return; }
+  try {
+    await sqlQuery(`insert into public.analistas (name, email) values
+      ('Ana Souza', 'ana.souza@empresa.com'),
+      ('Bruno Lima', 'bruno.lima@empresa.com'),
+      ('Carla Dias', 'carla.dias@empresa.com');`);
+    await refreshAll(false);
+    toast('Analistas de exemplo adicionados.', 'ok');
+  } catch (e) {
+    toast('Erro ao carregar exemplo: ' + e.message, 'err');
+  }
+}
+
+function renderTeam() {
+  const tbody = document.querySelector('#team-table tbody');
+  tbody.innerHTML = '';
+  document.getElementById('team-empty').style.display = analysts.length ? 'none' : 'block';
+  analysts.forEach(a => {
+    const activeCount = tasks.filter(t => t.analyst_id === a.id && t.status === 'pendente').length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${escapeHtml(a.name)}</td><td class="muted">${escapeHtml(a.email || '—')}</td><td>${activeCount}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="removeAnalyst('${a.id}')">Remover</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function refreshAnalystSelects() {
+  const opts = analysts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+  const f = document.getElementById('f-analyst'); f.innerHTML = opts || '<option value="">Cadastre um analista primeiro</option>';
+  const m = document.getElementById('mine-analyst'); m.innerHTML = '<option value="">Selecione...</option>' + opts;
+  const filt = document.getElementById('filter-analyst'); filt.innerHTML = '<option value="">Todos os analistas</option>' + opts;
+}
+
+// ---------- tasks ----------
+async function createTask() {
+  const title = document.getElementById('f-title').value.trim();
+  const desc = document.getElementById('f-desc').value.trim();
+  const analystId = document.getElementById('f-analyst').value;
+  const due = document.getElementById('f-due').value;
+
+  if (!title) { toast('Informe um título para a tarefa.', 'err'); return; }
+  if (!analystId) { toast('Selecione um analista.', 'err'); return; }
+  const analyst = analysts.find(a => a.id === analystId);
+  const btn = document.getElementById('btn-create-task');
+  btn.disabled = true;
+  try {
+    await sqlQuery(`insert into public.tarefas (title, description, analyst_id, due_date) values (${toSqlValue(title)}, ${toSqlValue(desc)}, '${sqlEscape(analystId)}', ${due ? "'" + sqlEscape(due) + "'" : 'NULL'});`);
+    toast('Tarefa atribuída a ' + (analyst ? analyst.name : 'analista') + '.', 'ok');
+    document.getElementById('f-title').value = '';
+    document.getElementById('f-desc').value = '';
+    document.getElementById('f-due').value = '';
+    await refreshAll(false);
+  } catch (e) {
+    toast('Erro ao criar tarefa: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function toggleTaskStatus(taskId) {
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
+  const newStatus = task.status === 'pendente' ? 'concluido' : 'pendente';
+  try {
+    await sqlQuery(`update public.tarefas set status = '${newStatus}', completed_at = ${newStatus === 'concluido' ? 'now()' : 'NULL'} where id = '${sqlEscape(taskId)}';`);
+    await refreshAll(false);
+  } catch (e) {
+    toast('Erro ao atualizar tarefa: ' + e.message, 'err');
+  }
+}
+
+// ---------- rendering: leader ----------
+let statusChart, analystChart, gridInstance;
+function renderLeader() {
+  const total = tasks.length;
+  const done = tasks.filter(t => t.status === 'concluido').length;
+  const pending = total - done;
+  const today = new Date().toISOString().slice(0,10);
+  const overdue = tasks.filter(t => t.status === 'pendente' && t.due_date && t.due_date < today).length;
+
+  document.getElementById('kpi-total').textContent = total;
+  document.getElementById('kpi-pending').textContent = pending;
+  document.getElementById('kpi-done').textContent = done;
+  document.getElementById('kpi-overdue').textContent = overdue;
+
+  const ctx1 = document.getElementById('chart-status');
+  if (statusChart) statusChart.destroy();
+  statusChart = new Chart(ctx1, {
+    type: 'doughnut',
+    data: { labels: ['Pendente', 'Concluído'], datasets: [{ data: [pending, done], backgroundColor: ['#b4740e', '#17845a'] }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  const byAnalyst = analysts.map(a => ({
+    name: a.name,
+    count: tasks.filter(t => t.analyst_id === a.id && t.status === 'pendente').length
+  }));
+  const ctx2 = document.getElementById('chart-analyst');
+  if (analystChart) analystChart.destroy();
+  analystChart = new Chart(ctx2, {
+    type: 'bar',
+    data: { labels: byAnalyst.map(a => a.name), datasets: [{ label: 'Tarefas pendentes', data: byAnalyst.map(a => a.count), backgroundColor: '#2f5fed' }] },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+  });
+
+  renderLeaderTable();
+}
+
+function renderLeaderTable() {
+  const filterAnalyst = document.getElementById('filter-analyst').value;
+  const filterStatus = document.getElementById('filter-status').value;
+  let rows = tasks.filter(t => (!filterAnalyst || t.analyst_id === filterAnalyst) && (!filterStatus || t.status === filterStatus));
+
+  document.getElementById('leader-empty').style.display = tasks.length ? 'none' : 'block';
+
+  const data = rows.map(t => {
+    const a = analysts.find(x => x.id === t.analyst_id);
+    return [
+      t.title,
+      a ? a.name : '—',
+      t.due_date || '—',
+      t.status === 'concluido' ? 'Concluído' : 'Pendente'
+    ];
+  });
+
+  const container = document.getElementById('gridjs-tasks');
+  container.innerHTML = '';
+  if (!data.length) return;
+  gridInstance = new gridjs.Grid({
+    columns: ['Tarefa', 'Analista', 'Prazo', 'Status'],
+    data,
+    sort: true,
+    search: true,
+    pagination: { limit: 8 },
+    className: { table: 'gridjs-table' }
+  }).render(container);
+}
+
+// ---------- rendering: minhas tarefas ----------
+function renderMyTasks() {
+  const id = document.getElementById('mine-analyst').value;
+  const list = document.getElementById('mine-list');
+  const empty = document.getElementById('mine-empty');
+  list.innerHTML = '';
+  if (!id) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  const mine = tasks.filter(t => t.analyst_id === id);
+  if (!mine.length) { list.innerHTML = '<div class="empty">Nenhuma tarefa atribuída a você ainda.</div>'; return; }
+  mine.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'checklist-item';
+    div.innerHTML = `
+      <input type="checkbox" ${t.status === 'concluido' ? 'checked' : ''} onchange="toggleTaskStatus('${t.id}')">
+      <div style="flex:1">
+        <div><strong>${escapeHtml(t.title)}</strong> <span class="pill ${t.status === 'concluido' ? 'pill-done' : 'pill-pending'}">${t.status === 'concluido' ? 'Concluído' : 'Pendente'}</span></div>
+        <div class="small muted">${escapeHtml(t.description || '')}</div>
+        <div class="small muted">${t.due_date ? 'Prazo: ' + t.due_date : 'Sem prazo'}</div>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+async function resetAll() {
+  if (!confirm('Isso apaga todos os analistas e tarefas do banco (para todo mundo que usa o app). Continuar?')) return;
+  try {
+    await sqlQuery('delete from public.tarefas; delete from public.analistas;');
+    await refreshAll(false);
+    toast('Dados apagados.', 'ok');
+  } catch (e) {
+    toast('Erro ao apagar dados: ' + e.message, 'err');
+  }
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- init ----------
+async function init() {
+  await refreshAll(false);
+  // sincroniza a cada 20s para refletir mudanças feitas por outras pessoas
+  setInterval(() => refreshAll(false), 20000);
+}
+init();
+</script>
+</body>
+</html>
