@@ -131,7 +131,14 @@
     <div class="card">
       <div class="flex-between">
         <h2>Escala de <span id="assign-date-label"></span></h2>
-        <button class="btn btn-primary" style="margin-top:0" onclick="generateDay()">Gerar atividades do dia</button>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <select id="assign-filter-turno" onchange="renderAssignTable()" style="width:auto; min-width:140px;">
+            <option value="">Todos os turnos</option>
+            <option value="AM">AM</option>
+            <option value="SD">SD</option>
+          </select>
+          <button class="btn btn-primary" style="margin-top:0" onclick="generateDay()">Gerar atividades do dia</button>
+        </div>
       </div>
       <p class="small muted">Cria as 16 atividades do turno AM e as 16 do turno SD para o dia selecionado (se ainda não existirem). Depois, atribua um analista a cada uma.</p>
       <table class="simple" id="assign-table">
@@ -223,12 +230,12 @@ async function restRequest(path, options) {
         ...(options && options.headers ? options.headers : {})
       }
     });
+    const raw = await res.text();
     if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`${res.status}: ${errText}`);
+      throw new Error(`${res.status}: ${raw}`);
     }
-    if (res.status === 204) return null;
-    return await res.json();
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch (e) { return null; }
   } finally {
     setBusy(false);
   }
@@ -385,10 +392,12 @@ async function toggleTaskStatus(taskId) {
 
 function renderAssignTable() {
   document.getElementById('assign-date-label').textContent = fmtDate(selectedDate());
+  const filterTurno = document.getElementById('assign-filter-turno').value;
+  const rows = tasks.filter(t => !filterTurno || t.turno === filterTurno);
   const tbody = document.querySelector('#assign-table tbody');
   tbody.innerHTML = '';
   document.getElementById('assign-empty').style.display = tasks.length ? 'none' : 'block';
-  tasks.forEach(t => {
+  rows.forEach(t => {
     const tr = document.createElement('tr');
     const opts = ['<option value="">— sem analista —</option>'].concat(
       analysts.map(a => `<option value="${a.id}" ${a.id === t.analyst_id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`)
