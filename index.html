@@ -222,6 +222,16 @@ const SHARED_ACTIVITIES = [
 ];
 const AM_ACTIVITIES = SHARED_ACTIVITIES.concat(["REPORT - 07:00","REPORT - 08:00","REPORT - 09:00"]);
 const PM_ACTIVITIES = SHARED_ACTIVITIES.concat(["REPORT - 10:00","REPORT - 12:00","REPORT - 13:00"]);
+const KNOWN_ACTIVITIES = new Set(AM_ACTIVITIES.concat(PM_ACTIVITIES));
+function sortTasksForDisplay(list) {
+  return (list || []).slice().sort((a, b) => {
+    if (a.turno !== b.turno) return a.turno < b.turno ? -1 : 1;
+    const aKnown = KNOWN_ACTIVITIES.has(a.activity_type) ? 1 : 0;
+    const bKnown = KNOWN_ACTIVITIES.has(b.activity_type) ? 1 : 0;
+    if (aKnown !== bKnown) return aKnown - bKnown;
+    return a.activity_type.localeCompare(b.activity_type);
+  });
+}
 
 let analysts = [];
 let tasks = [];
@@ -286,7 +296,8 @@ async function loadAnalysts() {
 }
 async function loadTasksForDate() {
   const d = selectedDate();
-  tasks = await restRequest(`tarefas?select=id,activity_type,turno,analyst_id,status,created_at,completed_at,activity_date&activity_date=eq.${d}&order=turno.asc,activity_type.asc`);
+  const rows = await restRequest(`tarefas?select=id,activity_type,turno,analyst_id,status,created_at,completed_at,activity_date&activity_date=eq.${d}&order=turno.asc,activity_type.asc`);
+  tasks = sortTasksForDisplay(rows);
 }
 async function refreshAll(showToast) {
   try {
@@ -340,8 +351,9 @@ async function addCustomActivity() {
       body: JSON.stringify([{ activity_type: name, activity_date: d, turno }])
     });
     nameInput.value = '';
+    document.getElementById('assign-filter-turno').value = '';
     await refreshAll(false);
-    toast('Atividade adicionada para ' + fmtDate(d) + '.', 'ok');
+    toast('Atividade adicionada no turno ' + turno + ' (' + fmtDate(d) + '). Ela aparece no topo da lista desse turno.', 'ok');
   } catch (e) {
     toast('Erro ao adicionar atividade: ' + e.message, 'err');
   }
@@ -458,7 +470,7 @@ function renderAssignTable() {
     ).join('');
     tr.innerHTML = `
       <td><span class="pill" style="background:#eef1f6;color:var(--text)">${t.turno}</span></td>
-      <td>${escapeHtml(t.activity_type)}</td>
+      <td>${escapeHtml(t.activity_type)}${!KNOWN_ACTIVITIES.has(t.activity_type) ? ' <span class="pill" style="background:var(--primary-light);color:var(--primary-dark);">Extra</span>' : ''}</td>
       <td><select onchange="assignAnalyst('${t.id}', this.value)">${opts}</select></td>
       <td>
         <span class="pill ${t.status === 'concluido' ? 'pill-done' : 'pill-pending'}">${t.status === 'concluido' ? 'Concluído' : 'Pendente'}</span>
