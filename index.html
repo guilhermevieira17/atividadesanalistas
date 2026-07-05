@@ -148,7 +148,7 @@
           <button class="btn btn-primary" style="margin-top:0" onclick="generateDay()">Gerar atividades do dia</button>
         </div>
       </div>
-      <p class="small muted">Cria as 16 atividades do turno AM e as 16 do turno PM para o dia selecionado (se ainda não existirem). Depois, atribua um analista a cada uma.</p>
+      <p class="small muted">Cria as 17 atividades do turno AM e as 17 do turno PM para o dia selecionado (se ainda não existirem). NO SHOW tem 2 vagas (2 pessoas). Depois, atribua um analista a cada uma.</p>
       <div style="display:flex; gap:8px; align-items:flex-end; margin-bottom:14px; flex-wrap:wrap; border-top:1px solid var(--border); padding-top:12px;">
         <div style="flex:1; min-width:220px;">
           <label style="margin-top:0;">Nova atividade (fora da lista padrão)</label>
@@ -217,7 +217,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const SHARED_ACTIVITIES = [
   "PREVIA PAINEL","ESCALA","FLEET CONTROL","REPORT - ALOCAÇÃO","ROTA MISTA",
-  "DASHBOARD ROTA MISTA","ALOCAÇÃO EHA","FORMS - NOSHOW","NO SHOW","YMS",
+  "DASHBOARD ROTA MISTA","ALOCAÇÃO EHA","FORMS - NOSHOW","NO SHOW 1","NO SHOW 2","YMS",
   "EXPEDIÇÃO / GEMBA","CONCLUSÃO PAINEL","RELATORIO OPERACIONAL FIM DE EXPEDIÇÃO"
 ];
 const AM_ACTIVITIES = SHARED_ACTIVITIES.concat(["REPORT - 07:00","REPORT - 08:00","REPORT - 09:00"]);
@@ -429,8 +429,14 @@ function renderTeam() {
 
 function refreshAnalystSelects() {
   const opts = analysts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
-  const m = document.getElementById('mine-analyst'); m.innerHTML = '<option value="">Selecione...</option>' + opts;
-  const filt = document.getElementById('filter-analyst'); filt.innerHTML = '<option value="">Todos os analistas</option>' + opts;
+  const m = document.getElementById('mine-analyst');
+  const mPrev = m.value;
+  m.innerHTML = '<option value="">Selecione...</option>' + opts;
+  if (mPrev && analysts.some(a => a.id === mPrev)) m.value = mPrev;
+  const filt = document.getElementById('filter-analyst');
+  const fPrev = filt.value;
+  filt.innerHTML = '<option value="">Todos os analistas</option>' + opts;
+  if (fPrev && analysts.some(a => a.id === fPrev)) filt.value = fPrev;
 }
 
 async function assignAnalyst(taskId, analystId) {
@@ -470,7 +476,7 @@ function renderAssignTable() {
     ).join('');
     tr.innerHTML = `
       <td><span class="pill" style="background:#eef1f6;color:var(--text)">${t.turno}</span></td>
-      <td>${escapeHtml(t.activity_type)}${!KNOWN_ACTIVITIES.has(t.activity_type) ? ' <span class="pill" style="background:var(--primary-light);color:var(--primary-dark);">Extra</span>' : ''}</td>
+      <td>${escapeHtml(t.activity_type)}${!KNOWN_ACTIVITIES.has(t.activity_type) ? ' <span class="pill" style="background:var(--primary-light);color:var(--primary-dark);">Nova</span>' : ''}</td>
       <td><select onchange="assignAnalyst('${t.id}', this.value)">${opts}</select></td>
       <td>
         <span class="pill ${t.status === 'concluido' ? 'pill-done' : 'pill-pending'}">${t.status === 'concluido' ? 'Concluído' : 'Pendente'}</span>
@@ -527,12 +533,20 @@ function renderLeaderTable() {
   });
 
   const container = document.getElementById('gridjs-tasks');
-  container.innerHTML = '';
-  if (!data.length) return;
-  gridInstance = new gridjs.Grid({
-    columns: ['Turno', 'Atividade', 'Analista', 'Status'],
-    data, sort: true, search: true, pagination: { limit: 10 }, className: { table: 'gridjs-table' }
-  }).render(container);
+  if (!data.length) {
+    container.innerHTML = '';
+    gridInstance = null;
+    return;
+  }
+  if (gridInstance) {
+    gridInstance.updateConfig({ data }).forceRender();
+  } else {
+    container.innerHTML = '';
+    gridInstance = new gridjs.Grid({
+      columns: ['Turno', 'Atividade', 'Analista', 'Status'],
+      data, sort: true, search: true, pagination: { limit: 10 }, className: { table: 'gridjs-table' }
+    }).render(container);
+  }
 }
 
 function renderMyTasks() {
