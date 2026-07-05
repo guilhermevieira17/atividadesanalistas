@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Divisão de Atividades - Analistas (HUB LPR-16)</title>
+<title>Divisão de Atividades - HUB LPR-16</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css">
@@ -15,10 +15,13 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
-  #app { max-width: 1100px; margin: 0 auto; padding: 20px 24px 60px; }
+  #app { max-width: 1150px; margin: 0 auto; padding: 20px 24px 60px; }
   header.top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
   header.top h1 { font-size: 20px; margin: 0; }
   header.top p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+  .top-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .date-picker { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: 6px 10px; }
+  .date-picker input { border: none; padding: 0; font-size: 13px; }
   .sync-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: 7px 11px; }
   .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
   .sync-dot.busy { background: var(--amber); }
@@ -35,7 +38,6 @@
     width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px;
     font-size: 13.5px; font-family: inherit; background: #fff; color: var(--text);
   }
-  textarea { resize: vertical; min-height: 60px; }
   .btn { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 7px; padding: 9px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin-top: 12px; }
   .btn:disabled { opacity: .55; cursor: default; }
   .btn-primary { background: var(--primary); color: #fff; }
@@ -48,8 +50,9 @@
   .pill-pending { background: var(--amber-bg); color: var(--amber); }
   .pill-done { background: var(--green-bg); color: var(--green); }
   table.simple { width: 100%; border-collapse: collapse; }
-  table.simple th, table.simple td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  table.simple th, table.simple td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
   table.simple th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .02em; }
+  table.simple select { width: auto; min-width: 160px; padding: 5px 8px; font-size: 12.5px; }
   .empty { color: var(--muted); font-size: 13px; padding: 10px 0; }
   .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
   .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
@@ -76,32 +79,35 @@
   <header class="top">
     <div>
       <h1>Divisão de Atividades — HUB LPR-16</h1>
-      <p>Atribua tarefas e acompanhe o status de conclusão do time. Dados em tempo real (Supabase).</p>
+      <p>Escala diária de atividades operacionais, com status compartilhado em tempo real (Supabase).</p>
     </div>
-    <div class="sync-badge"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">sincronizado</span> <button class="btn btn-secondary btn-sm" style="margin-top:0" onclick="refreshAll(true)">Atualizar</button></div>
+    <div class="top-controls">
+      <div class="date-picker">Dia: <input type="date" id="global-date" onchange="onDateChange()"></div>
+      <div class="sync-badge"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">sincronizado</span> <button class="btn btn-secondary btn-sm" style="margin-top:0" onclick="refreshAll(true)">Atualizar</button></div>
+    </div>
   </header>
 
   <nav class="tabs">
     <button class="tab-btn active" data-tab="tab-leader" onclick="switchTab('tab-leader')">Painel do Líder</button>
-    <button class="tab-btn" data-tab="tab-assign" onclick="switchTab('tab-assign')">Atribuir Tarefa</button>
+    <button class="tab-btn" data-tab="tab-assign" onclick="switchTab('tab-assign')">Escala do Dia</button>
     <button class="tab-btn" data-tab="tab-mine" onclick="switchTab('tab-mine')">Minhas Tarefas</button>
     <button class="tab-btn" data-tab="tab-team" onclick="switchTab('tab-team')">Equipe</button>
   </nav>
 
   <section id="tab-leader" class="tab active">
     <div class="kpis">
-      <div class="kpi"><div class="num" id="kpi-total">0</div><div class="lbl">Tarefas totais</div></div>
+      <div class="kpi"><div class="num" id="kpi-total">0</div><div class="lbl">Atividades do dia</div></div>
       <div class="kpi"><div class="num" id="kpi-pending">0</div><div class="lbl">Pendentes</div></div>
       <div class="kpi"><div class="num" id="kpi-done">0</div><div class="lbl">Concluídas</div></div>
-      <div class="kpi"><div class="num" id="kpi-overdue">0</div><div class="lbl">Atrasadas</div></div>
+      <div class="kpi"><div class="num" id="kpi-unassigned">0</div><div class="lbl">Sem analista</div></div>
     </div>
     <div class="grid-2">
-      <div class="card"><h2>Status geral</h2><div class="chart-wrap"><canvas id="chart-status"></canvas></div></div>
+      <div class="card"><h2>Status do dia</h2><div class="chart-wrap"><canvas id="chart-status"></canvas></div></div>
       <div class="card"><h2>Carga por analista</h2><div class="chart-wrap"><canvas id="chart-analyst"></canvas></div></div>
     </div>
     <div class="card">
       <div class="flex-between">
-        <h2>Todas as tarefas</h2>
+        <h2>Atividades do dia selecionado</h2>
         <div class="filters">
           <select id="filter-analyst" onchange="renderLeaderTable()"><option value="">Todos os analistas</option></select>
           <select id="filter-status" onchange="renderLeaderTable()">
@@ -109,25 +115,30 @@
             <option value="pendente">Pendente</option>
             <option value="concluido">Concluído</option>
           </select>
+          <select id="filter-turno" onchange="renderLeaderTable()">
+            <option value="">Todos os turnos</option>
+            <option value="AM">AM</option>
+            <option value="SD">SD</option>
+          </select>
         </div>
       </div>
       <div id="gridjs-tasks"></div>
-      <div class="empty" id="leader-empty" style="display:none">Nenhuma tarefa cadastrada ainda. Vá em "Atribuir Tarefa" para começar.</div>
+      <div class="empty" id="leader-empty" style="display:none">Nenhuma atividade gerada para este dia ainda. Vá em "Escala do Dia" para gerar.</div>
     </div>
   </section>
 
   <section id="tab-assign" class="tab">
     <div class="card">
-      <h2>Nova tarefa</h2>
-      <label>Título</label>
-      <input type="text" id="f-title" placeholder="Ex: Revisar relatório de estoque">
-      <label>Descrição</label>
-      <textarea id="f-desc" placeholder="Detalhes da atividade..."></textarea>
-      <div class="grid-2">
-        <div><label>Atribuir para</label><select id="f-analyst"></select></div>
-        <div><label>Prazo</label><input type="date" id="f-due"></div>
+      <div class="flex-between">
+        <h2>Escala de <span id="assign-date-label"></span></h2>
+        <button class="btn btn-primary" style="margin-top:0" onclick="generateDay()">Gerar atividades do dia</button>
       </div>
-      <button class="btn btn-primary" id="btn-create-task" onclick="createTask()">Atribuir tarefa</button>
+      <p class="small muted">Cria as 16 atividades do turno AM e as 16 do turno SD para o dia selecionado (se ainda não existirem). Depois, atribua um analista a cada uma.</p>
+      <table class="simple" id="assign-table">
+        <thead><tr><th>Turno</th><th>Atividade</th><th>Analista</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="assign-empty" style="display:none">Nenhuma atividade gerada para este dia ainda. Clique em "Gerar atividades do dia".</div>
     </div>
   </section>
 
@@ -137,9 +148,9 @@
       <select id="mine-analyst" onchange="renderMyTasks()"></select>
     </div>
     <div class="card">
-      <h2>Suas tarefas</h2>
+      <h2>Suas atividades de <span id="mine-date-label"></span></h2>
       <div id="mine-list"></div>
-      <div class="empty" id="mine-empty" style="display:none">Selecione seu nome acima para ver suas tarefas.</div>
+      <div class="empty" id="mine-empty" style="display:none">Selecione seu nome acima para ver suas atividades.</div>
     </div>
   </section>
 
@@ -161,7 +172,7 @@
         </div>
       </div>
       <table class="simple" id="team-table">
-        <thead><tr><th>Nome</th><th>E-mail</th><th>Tarefas ativas</th><th></th></tr></thead>
+        <thead><tr><th>Nome</th><th>E-mail</th><th>Atividades hoje</th><th></th></tr></thead>
         <tbody></tbody>
       </table>
       <div class="empty" id="team-empty" style="display:none">Nenhum analista cadastrado ainda.</div>
@@ -175,9 +186,21 @@
 const SUPABASE_URL = "https://iqssuavadcxboclocnem.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxc3N1YXZhZGN4Ym9jbG9jbmVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzQwOTcsImV4cCI6MjA5ODgxMDA5N30.7Cgz3nz-U9Z82nYgGg0VkI0ga3tWSe4u_YVcfl07Byo";
 
+const SHARED_ACTIVITIES = [
+  "PREVIA PAINEL","ESCALA","FLEET CONTROL","REPORT - ALOCAÇÃO","ROTA MISTA",
+  "DASHBOARD ROTA MISTA","ALOCAÇÃO EHA","FORMS - NOSHOW","NO SHOW","YMS",
+  "EXPEDIÇÃO / GEMBA","CONCLUSÃO PAINEL","RELATORIO OPERACIONAL FIM DE EXPEDIÇÃO"
+];
+const AM_ACTIVITIES = SHARED_ACTIVITIES.concat(["REPORT - 07:00","REPORT - 08:00","REPORT - 09:00"]);
+const SD_ACTIVITIES = SHARED_ACTIVITIES.concat(["REPORT - 10:00","REPORT - 12:00","REPORT - 13:00"]);
+
 let analysts = [];
 let tasks = [];
 let busyCount = 0;
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function selectedDate() { return document.getElementById('global-date').value || todayStr(); }
+function fmtDate(d) { const [y,m,dd] = d.split('-'); return `${dd}/${m}/${y}`; }
 
 function setBusy(isBusy) {
   busyCount += isBusy ? 1 : -1;
@@ -217,6 +240,7 @@ function switchTab(id) {
   document.getElementById(id).classList.add('active');
   document.querySelector(`.tab-btn[data-tab="${id}"]`).classList.add('active');
   if (id === 'tab-leader') renderLeader();
+  if (id === 'tab-assign') renderAssignTable();
   if (id === 'tab-mine') renderMyTasks();
 }
 
@@ -231,19 +255,45 @@ function toast(msg, type) {
 async function loadAnalysts() {
   analysts = await restRequest('analistas?select=id,name,email&order=name.asc');
 }
-async function loadTasks() {
-  tasks = await restRequest('tarefas?select=id,title,description,analyst_id,due_date,status,created_at,completed_at&order=created_at.desc');
+async function loadTasksForDate() {
+  const d = selectedDate();
+  tasks = await restRequest(`tarefas?select=id,activity_type,turno,analyst_id,status,created_at,completed_at,activity_date&activity_date=eq.${d}&order=turno.asc,activity_type.asc`);
 }
 async function refreshAll(showToast) {
   try {
-    await Promise.all([loadAnalysts(), loadTasks()]);
+    await Promise.all([loadAnalysts(), loadTasksForDate()]);
     refreshAnalystSelects();
     renderTeam();
-    renderLeader();
-    renderMyTasks();
+    document.getElementById('assign-date-label').textContent = fmtDate(selectedDate());
+    document.getElementById('mine-date-label').textContent = fmtDate(selectedDate());
+    const activeTab = document.querySelector('section.tab.active').id;
+    if (activeTab === 'tab-leader') renderLeader();
+    if (activeTab === 'tab-assign') renderAssignTable();
+    if (activeTab === 'tab-mine') renderMyTasks();
     if (showToast) toast('Dados atualizados.', 'ok');
   } catch (e) {
     toast('Não foi possível sincronizar com o banco: ' + e.message, 'err');
+  }
+}
+function onDateChange() { refreshAll(false); }
+
+async function generateDay() {
+  const d = selectedDate();
+  try {
+    await restRequest('tarefas?on_conflict=activity_type,activity_date,turno', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify(AM_ACTIVITIES.map(a => ({ activity_type: a, activity_date: d, turno: 'AM' })))
+    });
+    await restRequest('tarefas?on_conflict=activity_type,activity_date,turno', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify(SD_ACTIVITIES.map(a => ({ activity_type: a, activity_date: d, turno: 'SD' })))
+    });
+    await refreshAll(false);
+    toast('Atividades (AM e SD) geradas para ' + fmtDate(d) + '.', 'ok');
+  } catch (e) {
+    toast('Erro ao gerar atividades: ' + e.message, 'err');
   }
 }
 
@@ -267,7 +317,7 @@ async function addAnalyst() {
 }
 async function removeAnalyst(id) {
   if (tasks.some(t => t.analyst_id === id)) {
-    if (!confirm('Este analista tem tarefas associadas. Remover mesmo assim?')) return;
+    if (!confirm('Este analista tem atividades associadas hoje. Remover mesmo assim?')) return;
   }
   try {
     await restRequest(`analistas?id=eq.${id}`, { method: 'DELETE' });
@@ -306,35 +356,16 @@ function renderTeam() {
 
 function refreshAnalystSelects() {
   const opts = analysts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
-  const f = document.getElementById('f-analyst'); f.innerHTML = opts || '<option value="">Cadastre um analista primeiro</option>';
   const m = document.getElementById('mine-analyst'); m.innerHTML = '<option value="">Selecione...</option>' + opts;
   const filt = document.getElementById('filter-analyst'); filt.innerHTML = '<option value="">Todos os analistas</option>' + opts;
 }
 
-async function createTask() {
-  const title = document.getElementById('f-title').value.trim();
-  const desc = document.getElementById('f-desc').value.trim();
-  const analystId = document.getElementById('f-analyst').value;
-  const due = document.getElementById('f-due').value;
-
-  if (!title) { toast('Informe um título para a tarefa.', 'err'); return; }
-  if (!analystId) { toast('Selecione um analista.', 'err'); return; }
-  const analyst = analysts.find(a => a.id === analystId);
-  const btn = document.getElementById('btn-create-task');
-  btn.disabled = true;
+async function assignAnalyst(taskId, analystId) {
   try {
-    await restRequest('tarefas', { method: 'POST', body: JSON.stringify([{
-      title, description: desc || null, analyst_id: analystId, due_date: due || null
-    }]) });
-    toast('Tarefa atribuída a ' + (analyst ? analyst.name : 'analista') + '.', 'ok');
-    document.getElementById('f-title').value = '';
-    document.getElementById('f-desc').value = '';
-    document.getElementById('f-due').value = '';
+    await restRequest(`tarefas?id=eq.${taskId}`, { method: 'PATCH', body: JSON.stringify({ analyst_id: analystId || null }) });
     await refreshAll(false);
   } catch (e) {
-    toast('Erro ao criar tarefa: ' + e.message, 'err');
-  } finally {
-    btn.disabled = false;
+    toast('Erro ao atribuir analista: ' + e.message, 'err');
   }
 }
 
@@ -348,8 +379,30 @@ async function toggleTaskStatus(taskId) {
     }) });
     await refreshAll(false);
   } catch (e) {
-    toast('Erro ao atualizar tarefa: ' + e.message, 'err');
+    toast('Erro ao atualizar status: ' + e.message, 'err');
   }
+}
+
+function renderAssignTable() {
+  document.getElementById('assign-date-label').textContent = fmtDate(selectedDate());
+  const tbody = document.querySelector('#assign-table tbody');
+  tbody.innerHTML = '';
+  document.getElementById('assign-empty').style.display = tasks.length ? 'none' : 'block';
+  tasks.forEach(t => {
+    const tr = document.createElement('tr');
+    const opts = ['<option value="">— sem analista —</option>'].concat(
+      analysts.map(a => `<option value="${a.id}" ${a.id === t.analyst_id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`)
+    ).join('');
+    tr.innerHTML = `
+      <td><span class="pill" style="background:#eef1f6;color:var(--text)">${t.turno}</span></td>
+      <td>${escapeHtml(t.activity_type)}</td>
+      <td><select onchange="assignAnalyst('${t.id}', this.value)">${opts}</select></td>
+      <td>
+        <span class="pill ${t.status === 'concluido' ? 'pill-done' : 'pill-pending'}">${t.status === 'concluido' ? 'Concluído' : 'Pendente'}</span>
+        <button class="btn btn-ghost btn-sm" onclick="toggleTaskStatus('${t.id}')">${t.status === 'concluido' ? 'Reabrir' : 'Concluir'}</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
 }
 
 let statusChart, analystChart, gridInstance;
@@ -357,13 +410,12 @@ function renderLeader() {
   const total = tasks.length;
   const done = tasks.filter(t => t.status === 'concluido').length;
   const pending = total - done;
-  const today = new Date().toISOString().slice(0,10);
-  const overdue = tasks.filter(t => t.status === 'pendente' && t.due_date && t.due_date < today).length;
+  const unassigned = tasks.filter(t => !t.analyst_id).length;
 
   document.getElementById('kpi-total').textContent = total;
   document.getElementById('kpi-pending').textContent = pending;
   document.getElementById('kpi-done').textContent = done;
-  document.getElementById('kpi-overdue').textContent = overdue;
+  document.getElementById('kpi-unassigned').textContent = unassigned;
 
   const ctx1 = document.getElementById('chart-status');
   if (statusChart) statusChart.destroy();
@@ -373,12 +425,12 @@ function renderLeader() {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
   });
 
-  const byAnalyst = analysts.map(a => ({ name: a.name, count: tasks.filter(t => t.analyst_id === a.id && t.status === 'pendente').length }));
+  const byAnalyst = analysts.map(a => ({ name: a.name, count: tasks.filter(t => t.analyst_id === a.id).length }));
   const ctx2 = document.getElementById('chart-analyst');
   if (analystChart) analystChart.destroy();
   analystChart = new Chart(ctx2, {
     type: 'bar',
-    data: { labels: byAnalyst.map(a => a.name), datasets: [{ label: 'Tarefas pendentes', data: byAnalyst.map(a => a.count), backgroundColor: '#2f5fed' }] },
+    data: { labels: byAnalyst.map(a => a.name), datasets: [{ label: 'Atividades do dia', data: byAnalyst.map(a => a.count), backgroundColor: '#2f5fed' }] },
     options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
   });
 
@@ -388,21 +440,22 @@ function renderLeader() {
 function renderLeaderTable() {
   const filterAnalyst = document.getElementById('filter-analyst').value;
   const filterStatus = document.getElementById('filter-status').value;
-  let rows = tasks.filter(t => (!filterAnalyst || t.analyst_id === filterAnalyst) && (!filterStatus || t.status === filterStatus));
+  const filterTurno = document.getElementById('filter-turno').value;
+  let rows = tasks.filter(t => (!filterAnalyst || t.analyst_id === filterAnalyst) && (!filterStatus || t.status === filterStatus) && (!filterTurno || t.turno === filterTurno));
 
   document.getElementById('leader-empty').style.display = tasks.length ? 'none' : 'block';
 
   const data = rows.map(t => {
     const a = analysts.find(x => x.id === t.analyst_id);
-    return [t.title, a ? a.name : '—', t.due_date || '—', t.status === 'concluido' ? 'Concluído' : 'Pendente'];
+    return [t.turno, t.activity_type, a ? a.name : '— sem analista —', t.status === 'concluido' ? 'Concluído' : 'Pendente'];
   });
 
   const container = document.getElementById('gridjs-tasks');
   container.innerHTML = '';
   if (!data.length) return;
   gridInstance = new gridjs.Grid({
-    columns: ['Tarefa', 'Analista', 'Prazo', 'Status'],
-    data, sort: true, search: true, pagination: { limit: 8 }, className: { table: 'gridjs-table' }
+    columns: ['Turno', 'Atividade', 'Analista', 'Status'],
+    data, sort: true, search: true, pagination: { limit: 10 }, className: { table: 'gridjs-table' }
   }).render(container);
 }
 
@@ -414,23 +467,21 @@ function renderMyTasks() {
   if (!id) { empty.style.display = 'block'; return; }
   empty.style.display = 'none';
   const mine = tasks.filter(t => t.analyst_id === id);
-  if (!mine.length) { list.innerHTML = '<div class="empty">Nenhuma tarefa atribuída a você ainda.</div>'; return; }
+  if (!mine.length) { list.innerHTML = '<div class="empty">Nenhuma atividade atribuída a você neste dia.</div>'; return; }
   mine.forEach(t => {
     const div = document.createElement('div');
     div.className = 'checklist-item';
     div.innerHTML = `
       <input type="checkbox" ${t.status === 'concluido' ? 'checked' : ''} onchange="toggleTaskStatus('${t.id}')">
       <div style="flex:1">
-        <div><strong>${escapeHtml(t.title)}</strong> <span class="pill ${t.status === 'concluido' ? 'pill-done' : 'pill-pending'}">${t.status === 'concluido' ? 'Concluído' : 'Pendente'}</span></div>
-        <div class="small muted">${escapeHtml(t.description || '')}</div>
-        <div class="small muted">${t.due_date ? 'Prazo: ' + t.due_date : 'Sem prazo'}</div>
+        <div><span class="pill" style="background:#eef1f6;color:var(--text)">${t.turno}</span> <strong>${escapeHtml(t.activity_type)}</strong> <span class="pill ${t.status === 'concluido' ? 'pill-done' : 'pill-pending'}">${t.status === 'concluido' ? 'Concluído' : 'Pendente'}</span></div>
       </div>`;
     list.appendChild(div);
   });
 }
 
 async function resetAll() {
-  if (!confirm('Isso apaga todos os analistas e tarefas do banco (para todo mundo que usa o app). Continuar?')) return;
+  if (!confirm('Isso apaga TODOS os analistas e todas as atividades (de todos os dias) do banco. Continuar?')) return;
   try {
     await restRequest('tarefas?id=not.is.null', { method: 'DELETE' });
     await restRequest('analistas?id=not.is.null', { method: 'DELETE' });
@@ -446,6 +497,7 @@ function escapeHtml(s) {
 }
 
 async function init() {
+  document.getElementById('global-date').value = todayStr();
   await refreshAll(false);
   setInterval(() => refreshAll(false), 20000);
 }
