@@ -9,28 +9,35 @@
 <style>
   :root {
     color-scheme: light;
-    --bg: #f6f7f9; --card: #ffffff; --border: #e3e6ea; --text: #1c2126; --muted: #6b7280;
-    --primary: #2f5fed; --primary-dark: #1e46c9; --green: #17845a; --green-bg: #e6f6ef;
-    --amber: #b4740e; --amber-bg: #fdf1de; --red: #c0392b; --radius: 10px;
+    --bg: #f5f5f5; --card: #ffffff; --border: #f0e6e2; --text: #222222; --muted: #757575;
+    --primary: #ee4d2d; --primary-dark: #d0421f; --primary-light: #fff0ec;
+    --green: #178a5d; --green-bg: #e6f6ef;
+    --amber: #e08600; --amber-bg: #fff4e0; --red: #d0011b; --radius: 12px;
   }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
   #app { max-width: 1150px; margin: 0 auto; padding: 20px 24px 60px; }
-  header.top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
-  header.top h1 { font-size: 20px; margin: 0; }
-  header.top p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+  header.top {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    margin: -20px -24px 22px; padding: 22px 24px; color: #fff;
+    background: linear-gradient(135deg, #ff6a3d 0%, #ee4d2d 55%, #d0421f 100%);
+    border-radius: 0 0 18px 18px;
+  }
+  header.top h1 { font-size: 19px; margin: 0; color: #fff; display: flex; align-items: center; gap: 10px; letter-spacing: -.2px; }
+  header.top .logo-badge { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: #fff; color: var(--primary); border-radius: 9px; font-weight: 800; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,.15); flex-shrink: 0; }
+  header.top p { margin: 3px 0 0; color: rgba(255,255,255,.9); font-size: 12.5px; }
   .top-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .date-picker { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: 6px 10px; }
+  .date-picker { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); border: none; background: #fff; border-radius: 8px; padding: 6px 10px; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
   .date-picker input { border: none; padding: 0; font-size: 13px; }
-  .sync-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: 7px 11px; }
+  .sync-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); border: none; background: #fff; border-radius: 8px; padding: 7px 11px; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
   .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
   .sync-dot.busy { background: var(--amber); }
   nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; flex-wrap: wrap; }
-  nav.tabs button { border: none; background: none; padding: 10px 14px; font-size: 13.5px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; font-weight: 500; }
-  nav.tabs button.active { color: var(--primary); border-bottom-color: var(--primary); }
+  nav.tabs button { border: none; background: none; padding: 10px 16px; font-size: 13.5px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; font-weight: 600; border-radius: 8px 8px 0 0; }
+  nav.tabs button.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--primary-light); }
   section.tab { display: none; }
   section.tab.active { display: block; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
   .card h2 { font-size: 15px; margin: 0 0 12px; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 4px; margin-top: 10px; }
@@ -38,12 +45,13 @@
     width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px;
     font-size: 13.5px; font-family: inherit; background: #fff; color: var(--text);
   }
-  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 7px; padding: 9px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin-top: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 9px; padding: 9px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin-top: 12px; transition: background .15s, transform .1s; }
   .btn:disabled { opacity: .55; cursor: default; }
-  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 3px 8px rgba(238,77,45,.3); }
   .btn-primary:hover { background: var(--primary-dark); }
-  .btn-secondary { background: #eef1f6; color: var(--text); }
-  .btn-secondary:hover { background: #e2e6ed; }
+  .btn-primary:active { transform: scale(.98); }
+  .btn-secondary { background: #f5efec; color: var(--text); }
+  .btn-secondary:hover { background: #ece2dd; }
   .btn-ghost { background: none; color: var(--primary); padding: 4px 8px; margin-top: 0; }
   .btn-sm { padding: 5px 10px; font-size: 12px; margin-top: 0; }
   .pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
@@ -78,8 +86,8 @@
 <div id="app">
   <header class="top">
     <div>
-      <h1>Divisão de Atividades — HUB LPR-16</h1>
-      <p>Escala diária de atividades operacionais, com status compartilhado em tempo real (Supabase).</p>
+      <h1><span class="logo-badge">S</span>Divisão de Atividades — HUB LPR-16</h1>
+      <p>Escala diária de atividades operacionais, com status compartilhado em tempo real.</p>
     </div>
     <div class="top-controls">
       <div class="date-picker">Dia: <input type="date" id="global-date" onchange="onDateChange()"></div>
