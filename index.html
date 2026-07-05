@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>Divisão de Atividades - HUB LPR-16</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
 <style>
   :root {
     color-scheme: light;
@@ -57,6 +57,7 @@
   .pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
   .pill-pending { background: var(--amber-bg); color: var(--amber); }
   .pill-done { background: var(--green-bg); color: var(--green); }
+  .pill-unassigned { background: var(--primary-light); color: var(--primary-dark); }
   table.simple { width: 100%; border-collapse: collapse; }
   table.simple th, table.simple td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
   table.simple th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .02em; }
@@ -102,6 +103,7 @@
     <button class="tab-btn" data-tab="tab-team" onclick="switchTab('tab-team')">Equipe</button>
   </nav>
 
+  <!-- PAINEL DO LÍDER -->
   <section id="tab-leader" class="tab active">
     <div class="kpis">
       <div class="kpi"><div class="num" id="kpi-total">0</div><div class="lbl">Atividades do dia</div></div>
@@ -135,6 +137,7 @@
     </div>
   </section>
 
+  <!-- ESCALA DO DIA -->
   <section id="tab-assign" class="tab">
     <div class="card">
       <div class="flex-between">
@@ -171,6 +174,7 @@
     </div>
   </section>
 
+  <!-- MINHAS TAREFAS -->
   <section id="tab-mine" class="tab">
     <div class="card">
       <label>Quem é você?</label>
@@ -183,6 +187,7 @@
     </div>
   </section>
 
+  <!-- EQUIPE -->
   <section id="tab-team" class="tab">
     <div class="card">
       <h2>Adicionar analista</h2>
@@ -211,9 +216,8 @@
 <div class="toast-container" id="toasts"></div>
 
 <script>
-// Configuração do Supabase (chave anon pública — protegida pelas políticas de RLS do banco)
-const SUPABASE_URL = "https://iqssuavadcxboclocnem.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxc3N1YXZhZGN4Ym9jbG9jbmVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzQwOTcsImV4cCI6MjA5ODgxMDA5N30.7Cgz3nz-U9Z82nYgGg0VkI0ga3tWSe4u_YVcfl07Byo";
+const PROJECT_ID = "iqssuavadcxboclocnem";
+const TOOL_EXECUTE_SQL = "mcp__e576e259-3224-4581-a86d-e166866fd6f4__execute_sql";
 
 const SHARED_ACTIVITIES = [
   "PREVIA PAINEL","ESCALA","FLEET CONTROL","REPORT - ALOCAÇÃO","ROTA MISTA",
@@ -229,7 +233,10 @@ let busyCount = 0;
 
 function todayStr() { return new Date().toISOString().slice(0,10); }
 function selectedDate() { return document.getElementById('global-date').value || todayStr(); }
-function fmtDate(d) { const [y,m,dd] = d.split('-'); return `${dd}/${m}/${y}`; }
+function fmtDate(d) {
+  const [y,m,dd] = d.split('-');
+  return `${dd}/${m}/${y}`;
+}
 
 function setBusy(isBusy) {
   busyCount += isBusy ? 1 : -1;
@@ -240,24 +247,20 @@ function setBusy(isBusy) {
   else { dot.classList.remove('busy'); label.textContent = 'sincronizado'; }
 }
 
-async function restRequest(path, options) {
+function sqlEscape(str) { return String(str ?? '').replace(/'/g, "''"); }
+function toSqlValue(v) { if (v === null || v === undefined || v === '') return 'NULL'; return `'${sqlEscape(v)}'`; }
+
+async function sqlQuery(query) {
   setBusy(true);
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-      ...options,
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        ...(options && options.headers ? options.headers : {})
-      }
-    });
-    const raw = await res.text();
-    if (!res.ok) {
-      throw new Error(`${res.status}: ${raw}`);
-    }
-    if (!raw) return null;
-    try { return JSON.parse(raw); } catch (e) { return null; }
+    const r = await window.cowork.callMcpTool(TOOL_EXECUTE_SQL, { project_id: PROJECT_ID, query });
+    if (r && r.isError) throw new Error('Erro ao consultar o banco.');
+    const data = r.structuredContent ?? JSON.parse(r.content[0].text);
+    const resultText = (data && data.result) ? data.result : (typeof data === 'string' ? data : '');
+    const match = resultText.match(/<untrusted-data-[^>]*>([\s\S]*?)<\/untrusted-data-[^>]*>/);
+    const raw = match ? match[1].trim() : resultText.trim();
+    if (!raw) return [];
+    try { return JSON.parse(raw); } catch (e) { return []; }
   } finally {
     setBusy(false);
   }
@@ -282,11 +285,11 @@ function toast(msg, type) {
 }
 
 async function loadAnalysts() {
-  analysts = await restRequest('analistas?select=id,name,email&order=name.asc');
+  analysts = await sqlQuery('select id, name, email from public.analistas order by name asc;');
 }
 async function loadTasksForDate() {
   const d = selectedDate();
-  tasks = await restRequest(`tarefas?select=id,activity_type,turno,analyst_id,status,created_at,completed_at,activity_date&activity_date=eq.${d}&order=turno.asc,activity_type.asc`);
+  tasks = await sqlQuery(`select id, activity_type, turno, analyst_id, status, created_at, completed_at, to_char(activity_date,'YYYY-MM-DD') as activity_date from public.tarefas where activity_date = '${sqlEscape(d)}' order by turno asc, activity_type asc;`);
 }
 async function refreshAll(showToast) {
   try {
@@ -306,19 +309,22 @@ async function refreshAll(showToast) {
 }
 function onDateChange() { refreshAll(false); }
 
+// ---------- geração diária ----------
+function pgArray(list) {
+  return "array[" + list.map(v => "'" + sqlEscape(v) + "'").join(",") + "]::public.activity_type[]";
+}
 async function generateDay() {
   const d = selectedDate();
   try {
-    await restRequest('tarefas?on_conflict=activity_type,activity_date,turno', {
-      method: 'POST',
-      headers: { 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
-      body: JSON.stringify(AM_ACTIVITIES.map(a => ({ activity_type: a, activity_date: d, turno: 'AM' })))
-    });
-    await restRequest('tarefas?on_conflict=activity_type,activity_date,turno', {
-      method: 'POST',
-      headers: { 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
-      body: JSON.stringify(PM_ACTIVITIES.map(a => ({ activity_type: a, activity_date: d, turno: 'PM' })))
-    });
+    await sqlQuery(`
+      insert into public.tarefas (activity_type, activity_date, turno)
+      select v, '${sqlEscape(d)}'::date, 'AM' from unnest(${pgArray(AM_ACTIVITIES)}) as v
+      on conflict (activity_type, activity_date, turno) do nothing;
+
+      insert into public.tarefas (activity_type, activity_date, turno)
+      select v, '${sqlEscape(d)}'::date, 'PM' from unnest(${pgArray(PM_ACTIVITIES)}) as v
+      on conflict (activity_type, activity_date, turno) do nothing;
+    `);
     await refreshAll(false);
     toast('Atividades (AM e PM) geradas para ' + fmtDate(d) + '.', 'ok');
   } catch (e) {
@@ -334,11 +340,7 @@ async function addCustomActivity() {
   if (!name) { toast('Informe o nome da atividade.', 'err'); return; }
   const d = selectedDate();
   try {
-    await restRequest('tarefas?on_conflict=activity_type,activity_date,turno', {
-      method: 'POST',
-      headers: { 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
-      body: JSON.stringify([{ activity_type: name, activity_date: d, turno }])
-    });
+    await sqlQuery(`insert into public.tarefas (activity_type, activity_date, turno) values (${toSqlValue(name)}, '${sqlEscape(d)}'::date, '${sqlEscape(turno)}') on conflict (activity_type, activity_date, turno) do nothing;`);
     nameInput.value = '';
     await refreshAll(false);
     toast('Atividade adicionada para ' + fmtDate(d) + '.', 'ok');
@@ -350,7 +352,7 @@ async function addCustomActivity() {
 async function deleteTask(taskId) {
   if (!confirm('Remover esta atividade? Essa ação não pode ser desfeita.')) return;
   try {
-    await restRequest(`tarefas?id=eq.${taskId}`, { method: 'DELETE' });
+    await sqlQuery(`delete from public.tarefas where id = '${sqlEscape(taskId)}';`);
     await refreshAll(false);
     toast('Atividade removida.', 'ok');
   } catch (e) {
@@ -358,6 +360,7 @@ async function deleteTask(taskId) {
   }
 }
 
+// ---------- analistas ----------
 async function addAnalyst() {
   const name = document.getElementById('t-name').value.trim();
   const email = document.getElementById('t-email').value.trim();
@@ -365,7 +368,7 @@ async function addAnalyst() {
   const btn = document.getElementById('btn-add-analyst');
   btn.disabled = true;
   try {
-    await restRequest('analistas', { method: 'POST', body: JSON.stringify([{ name, email: email || null }]) });
+    await sqlQuery(`insert into public.analistas (name, email) values (${toSqlValue(name)}, ${toSqlValue(email)});`);
     document.getElementById('t-name').value = '';
     document.getElementById('t-email').value = '';
     await refreshAll(false);
@@ -381,7 +384,7 @@ async function removeAnalyst(id) {
     if (!confirm('Este analista tem atividades associadas hoje. Remover mesmo assim?')) return;
   }
   try {
-    await restRequest(`analistas?id=eq.${id}`, { method: 'DELETE' });
+    await sqlQuery(`delete from public.analistas where id = '${sqlEscape(id)}';`);
     await refreshAll(false);
   } catch (e) {
     toast('Erro ao remover analista: ' + e.message, 'err');
@@ -390,11 +393,10 @@ async function removeAnalyst(id) {
 async function loadSampleData() {
   if (analysts.length > 0) { if (!confirm('Isso adiciona analistas de exemplo à lista atual. Continuar?')) return; }
   try {
-    await restRequest('analistas', { method: 'POST', body: JSON.stringify([
-      { name: 'Ana Souza', email: 'ana.souza@empresa.com' },
-      { name: 'Bruno Lima', email: 'bruno.lima@empresa.com' },
-      { name: 'Carla Dias', email: 'carla.dias@empresa.com' }
-    ]) });
+    await sqlQuery(`insert into public.analistas (name, email) values
+      ('Ana Souza', 'ana.souza@empresa.com'),
+      ('Bruno Lima', 'bruno.lima@empresa.com'),
+      ('Carla Dias', 'carla.dias@empresa.com');`);
     await refreshAll(false);
     toast('Analistas de exemplo adicionados.', 'ok');
   } catch (e) {
@@ -421,9 +423,10 @@ function refreshAnalystSelects() {
   const filt = document.getElementById('filter-analyst'); filt.innerHTML = '<option value="">Todos os analistas</option>' + opts;
 }
 
+// ---------- atribuição ----------
 async function assignAnalyst(taskId, analystId) {
   try {
-    await restRequest(`tarefas?id=eq.${taskId}`, { method: 'PATCH', body: JSON.stringify({ analyst_id: analystId || null }) });
+    await sqlQuery(`update public.tarefas set analyst_id = ${analystId ? "'" + sqlEscape(analystId) + "'" : 'NULL'} where id = '${sqlEscape(taskId)}';`);
     await refreshAll(false);
   } catch (e) {
     toast('Erro ao atribuir analista: ' + e.message, 'err');
@@ -435,15 +438,14 @@ async function toggleTaskStatus(taskId) {
   if (!task) return;
   const newStatus = task.status === 'pendente' ? 'concluido' : 'pendente';
   try {
-    await restRequest(`tarefas?id=eq.${taskId}`, { method: 'PATCH', body: JSON.stringify({
-      status: newStatus, completed_at: newStatus === 'concluido' ? new Date().toISOString() : null
-    }) });
+    await sqlQuery(`update public.tarefas set status = '${newStatus}', completed_at = ${newStatus === 'concluido' ? 'now()' : 'NULL'} where id = '${sqlEscape(taskId)}';`);
     await refreshAll(false);
   } catch (e) {
     toast('Erro ao atualizar status: ' + e.message, 'err');
   }
 }
 
+// ---------- escala do dia ----------
 function renderAssignTable() {
   document.getElementById('assign-date-label').textContent = fmtDate(selectedDate());
   const filterTurno = document.getElementById('assign-filter-turno').value;
@@ -469,6 +471,7 @@ function renderAssignTable() {
   });
 }
 
+// ---------- rendering: leader ----------
 let statusChart, analystChart, gridInstance;
 function renderLeader() {
   const total = tasks.length;
@@ -523,6 +526,7 @@ function renderLeaderTable() {
   }).render(container);
 }
 
+// ---------- minhas tarefas ----------
 function renderMyTasks() {
   const id = document.getElementById('mine-analyst').value;
   const list = document.getElementById('mine-list');
@@ -547,8 +551,7 @@ function renderMyTasks() {
 async function resetAll() {
   if (!confirm('Isso apaga TODOS os analistas e todas as atividades (de todos os dias) do banco. Continuar?')) return;
   try {
-    await restRequest('tarefas?id=not.is.null', { method: 'DELETE' });
-    await restRequest('analistas?id=not.is.null', { method: 'DELETE' });
+    await sqlQuery('delete from public.tarefas; delete from public.analistas;');
     await refreshAll(false);
     toast('Dados apagados.', 'ok');
   } catch (e) {
@@ -560,6 +563,7 @@ function escapeHtml(s) {
   return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// ---------- init ----------
 async function init() {
   document.getElementById('global-date').value = todayStr();
   await refreshAll(false);
